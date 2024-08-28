@@ -26,6 +26,24 @@ app.post('/register', (req, res) => {
         .catch(err => res.json(err))
 })
 
+// login user
+app.post('/login', (req, res) => {
+    const {email, password} = req.body;
+    UserModel.findOne({email})
+        .then(user => {
+            if(user) {
+                if(user.password === password) {
+                    // put in terminal to generate random secret key -> node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+                    const accessToken = jwt.sign({email}, process.env.ACCESS_TOKEN_SECRET_KEY, {expiresIn: '1m'});
+                    const refreshToken = jwt.sign({email}, process.env.REFRESH_TOKEN_SECRET_KEY, {expiresIn: '5m'})
+                }
+            } else {
+                res.json("User not found")
+            }
+        })
+        .catch(err => res.json(err))
+})
+
 app.listen(3001, () => {
     console.log("Server is Running...");
 });

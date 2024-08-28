@@ -9,7 +9,7 @@ const Login = () => {
 
   const handleSubmit = e => {
       e.preventDefault();
-      axios.post('http://localhost:3001/register', {name, email, password})
+      axios.post('http://localhost:3001/login', {email, password})
           .then(res => navigate('/login'))
           .catch(err => console.log(err))
   }
