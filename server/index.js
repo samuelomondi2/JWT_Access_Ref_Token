@@ -11,7 +11,10 @@ import UserModel from './models/User.js';
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:5173'],
+    credentials: true
+}));
 
 // connect to database
 mongoose.connect(process.env.MONGO_URL)
@@ -35,7 +38,15 @@ app.post('/login', (req, res) => {
                 if(user.password === password) {
                     // put in terminal to generate random secret key -> node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
                     const accessToken = jwt.sign({email}, process.env.ACCESS_TOKEN_SECRET_KEY, {expiresIn: '1m'});
-                    const refreshToken = jwt.sign({email}, process.env.REFRESH_TOKEN_SECRET_KEY, {expiresIn: '5m'})
+                    const refreshToken = jwt.sign({email}, process.env.REFRESH_TOKEN_SECRET_KEY, {expiresIn: '5m'});
+
+                    // store in cookie. maxAge is in ms
+                    res.cookie('accessToken', accessToken, {maxAge: 60000});
+
+                    // TODO: store in database
+                    res.cookie('refreshToken', refreshToken, {maxAge: 300000, httpOnly: true, secure: true, sameSite: 'strict'});
+
+                    res.json("Login Successful");
                 }
             } else {
                 res.json("User not found")
