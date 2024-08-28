@@ -13,8 +13,11 @@ const Login = () => {
       e.preventDefault();
       axios.post('http://localhost:3001/login', {email, password})
           .then(res => {
-            console.log(res.data)
-            // navigate('/login')
+            if(res.data.Login) {
+              navigate('/dashboard');
+            } else {
+              navigate('/');
+            }
           })
           .catch(err => console.log(err))
   }

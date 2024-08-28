@@ -27,7 +27,7 @@ app.post('/register', (req, res) => {
     UserModel.create({name, email, password})
         .then(user => res.json(user))
         .catch(err => res.json(err))
-})
+});
 
 // login user
 app.post('/login', (req, res) => {
@@ -46,14 +46,18 @@ app.post('/login', (req, res) => {
                     // TODO: store in database
                     res.cookie('refreshToken', refreshToken, {maxAge: 300000, httpOnly: true, secure: true, sameSite: 'strict'});
 
-                    res.json("Login Successful");
+                    return res.json({Login: true});
                 }
             } else {
-                res.json("User not found")
+                res.json({Login: false, Message: 'User not found'})
             }
         })
         .catch(err => res.json(err))
-})
+});
+
+app.get('/dashboard', (req, res) => {
+    return res.json({valid: true, message: 'authorized'});
+});
 
 app.listen(3001, () => {
     console.log("Server is Running...");
