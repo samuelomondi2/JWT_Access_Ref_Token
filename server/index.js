@@ -11,6 +11,7 @@ import UserModel from './models/User.js';
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 app.use(cors({
     origin: ['http://localhost:5173'],
     credentials: true
@@ -55,7 +56,44 @@ app.post('/login', (req, res) => {
         .catch(err => res.json(err))
 });
 
-app.get('/dashboard', (req, res) => {
+const verifyUser = (req, res, next) => {
+    const accesstoken = req.cookies.accessToken;
+    if(!accesstoken) {
+        if(renewToken(req, res)) {
+            next(); // execute dashboard - return res.json({valid: true, message: 'authorized'});
+        }
+    } else {
+        jwt.verify(accesstoken, process.env.ACCESS_TOKEN_SECRET_KEY, (err, decode) => {
+            if(err) {
+                return res.json({valid: false, message: 'Invalid Token'})
+            } else {
+                req.email = decode.email; // the payload (decode.email) we stored
+                next(); 
+            }
+        });
+    }
+};
+
+const renewToken = (req, res) => {
+    const refreshtoken = req.cookies.refreshToken;
+    let exist = false;
+    if(!refreshtoken) {
+        return res.json({valid: false, message: 'No Refresh Token'});
+    } else {
+        jwt.verify(refreshtoken, process.env.REFRESH_TOKEN_SECRET_KEY, (err, decode) => {
+            if(err) {
+                return res.json({valid: false, message: 'Invalid Refresh Token'})
+            } else {
+                const accessToken = jwt.sign({email: decode.email}, process.env.ACCESS_TOKEN_SECRET_KEY, {expiresIn: '1m'});
+                res.cookie('accessToken', accessToken, {maxAge: 60000});
+                exist = true;
+            }
+        });
+    }
+    return exist;
+};
+
+app.get('/dashboard', verifyUser, (req, res) => {
     return res.json({valid: true, message: 'authorized'});
 });
 
